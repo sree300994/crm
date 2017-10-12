@@ -1,0 +1,80 @@
+<h2>Listing Vendors</h2>
+
+<ul id="listVendors">
+	
+</ul>
+
+<h2>Add Vendor</h2>
+<p id="msg"></p>
+
+<form id="addVendor" action="#">
+	<label> Name </label> <br/>
+	<input type="text" id="name" name="name" /> <br/>
+
+	<label> Company </label> <br/>
+	<input type="text" id="company" name="company" /> <br/>
+
+	<label> Website </label> <br/>
+	<input type="text" id="website" name="website" /> <br/>
+
+	<input type="submit" value="add vendor" />
+</form>
+
+<script>
+	window.addEventListener("load", function(){
+		var listVendorsHandle = document.getElementById('listVendors');
+		var addVendorFormHandle = document.getElementById('addVendor');
+		var msgHandle = document.getElementById('msg');
+
+		var nameHandle = document.getElementById('name');
+		var companyHandle = document.getElementById('company');
+		var websiteHandle = document.getElementById('website');
+
+		function getVendors(){
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/v1/vendors', true);
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState === 4 && xhr.status === 200){
+					var vendors = JSON.parse(xhr.responseText);
+					var output = "";
+					vendors.forEach(function(vendor){
+						output += `<li>${vendor.name}</li>`
+					});
+					listVendorsHandle.innerHTML = output;
+				}
+			}
+			xhr.send();
+		}
+
+		getVendors();
+
+		addVendorFormHandle.addEventListener('submit', function(e){
+			e.preventDefault();
+
+			var formData = {
+				vendor: {
+					name: nameHandle.value,
+					company: companyHandle.value,
+					website: websiteHandle.value
+				}
+			};
+
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/api/v1/vendors', true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					var response = JSON.parse(xhr.responseText);
+					if (response.hasOwnProperty("id")) {
+						msgHandle.innerHTML = "Successfully added vendor";
+						addVendorFormHandle.reset();
+						getVendors();
+					} else {
+						msgHandle.innerHTML = response.errors.join(", ");
+					}
+				}
+			}
+			xhr.send(JSON.stringify(formData));
+		}, false);
+	}, false);
+</script>

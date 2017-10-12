@@ -1,0 +1,90 @@
+<h2>Listing Customers</h2>
+
+<ul id="listCustomers">
+	
+</ul>
+
+<h2>Add Customer</h2>
+
+<p id="msg"></p>
+
+<form id="addCustomer" action="#">
+	<label> Name </label> <br/>
+	<input type="text" id="name" name="name" /> <br/>
+
+	<label> Mobile </label> <br/>
+	<input type="text" id="mobile" name="mobile" /> <br/>
+
+	<label> Email </label> <br/>
+	<input type="text" id="email" name="email" /> <br/>
+
+	<input type="submit" value="add customer" />
+</form>
+
+<script>
+	window.addEventListener('load', function(){
+		var listCustomersHandle = document.getElementById('listCustomers');
+		var addCustomerFormHandle = document.getElementById('addCustomer');
+		var msgHandle = document.getElementById('msg');
+
+		var nameHandle = document.getElementById('name');
+		var mobileHandle = document.getElementById('mobile');
+		var emailHandle = document.getElementById('email');
+
+		function getCustomers(){
+			var xhr = new XMLHttpRequest();
+			listCustomersHandle.innerHTML = "";
+			xhr.open('GET', '/api/v1/customers', true);
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					var customers = JSON.parse(xhr.responseText);
+					var output = "";
+					customers.forEach(function(customer){
+						var newElement = document.createElement('li');
+						var newText = document.createTextNode(customer.name);
+						newElement.appendChild(newText);
+						listCustomersHandle.appendChild(newElement);
+						// output += `<li>${customer.name}</li>`
+					});
+					// listCustomersHandle.innerHTML = output;
+				}
+			}
+			xhr.send();
+		}
+		getCustomers();
+
+		addCustomerFormHandle.addEventListener('submit', function(e){
+			e.preventDefault();
+
+			var formData = {
+				customer: {
+					name: nameHandle.value,
+					mobile: mobileHandle.value,
+					email: emailHandle.value
+				}
+			};
+
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', '/api/v1/customers', true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					var response = JSON.parse(xhr.responseText);
+					if (response.hasOwnProperty("id")) {
+						msgHandle.innerHTML = "Successfully added customer";
+						// reset form elements
+						addCustomerFormHandle.reset();
+						// nameHandle.value = "";
+						// emailHandle.value = "";
+						// mobileHandle.value = "";
+						getCustomers();
+					} else {
+						msgHandle.innerHTML = response.errors.join(", ");
+					}
+				}
+			}
+			xhr.send(JSON.stringify(formData));
+		}, false);
+	}, false);
+</script>
+
